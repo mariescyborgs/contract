@@ -21,7 +21,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     //Ebisusbay FEE : 5%
     uint public ebisusbayFee = 5;
     // Address is to set up
-    address public ebisusbayWallet = 0x86A5E11850540Bb632A5a1A2f4f0Adfcf6C2e96b;
+    address public ebisusbayWallet = 0x454cfAa623A629CC0b4017aEb85d54C42e91479d;
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
@@ -43,8 +43,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
         return baseURI;
     }
 
-    // public
-    //Declare an Event
+    // Mint Function for White-List and Public Sale
     event MintEvent(address indexed _from, uint256 indexed mintAmount);
 
     function mint(uint256 _mintAmount) public payable {
@@ -55,7 +54,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
             _mintAmount <= maxMintAmount,
             "max mint amount per session exceeded"
         );
-        require(supply + _mintAmount <= maxSupply, "max NFT limit exceeded");
+        require((supply + _mintAmount) <= maxSupply, "max NFT limit exceeded");
 
         if (msg.sender != owner()) {
             if (onlyWhitelisted == true) {
@@ -64,29 +63,43 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
 
             uint256 ownerMintedCount = addressMintedBalance[msg.sender];
             require(
-                ownerMintedCount + _mintAmount <= nftPerAddressLimit,
+                (ownerMintedCount + _mintAmount) <= nftPerAddressLimit,
                 "max NFT per address exceeded"
             );
 
             if (verifyUser(msg.sender)) {
                 require(
-                    msg.value >= whiteListCost * _mintAmount,
+                    msg.value >= whiteListCost,
                     "insufficient funds"
                 );
+                require(_mintAmount == 1, "only 1 for White-List");
+                 addressMintedBalance[msg.sender]++;
+            _safeMint(msg.sender, supply + 1);
+            whitelistedAddresses[msg.sender] = false;
+
             } else {
                 require(
-                    msg.value >= publicCost * _mintAmount,
+                    msg.value >= (publicCost * _mintAmount),
                     "insufficient funds"
                 );
-                      uint amountFee = (msg.value * ebisusbayFee) / 100;
-                     _asyncTransfer(ebisusbayWallet,  amountFee);
-            }
-        }
+                      uint amountFee = ( (publicCost * _mintAmount) * ebisusbayFee) / 100;
+                
 
-        for (uint256 i = 1; i <= _mintAmount; i++) {
+                          for (uint256 i = 1; i <= _mintAmount; i++) {
             addressMintedBalance[msg.sender]++;
             _safeMint(msg.sender, supply + i);
         }
+             _asyncTransfer(ebisusbayWallet,  amountFee);
+
+            }
+        } else {
+                                      for (uint256 i = 1; i <= _mintAmount; i++) {
+            addressMintedBalance[msg.sender]++;
+            _safeMint(msg.sender, supply + i);
+        }
+        }
+
+   
 
        
 
