@@ -20,7 +20,8 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
 
     //Ebisusbay FEE : 5%
     uint public ebisusbayFee = 5;
-    address public ebisusbayWallet = "0x86A5E11850540Bb632A5a1A2f4f0Adfcf6C2e96b";
+    // Address is to set up
+    address public ebisusbayWallet = 0x86A5E11850540Bb632A5a1A2f4f0Adfcf6C2e96b;
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
