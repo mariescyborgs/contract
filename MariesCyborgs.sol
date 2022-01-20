@@ -5,23 +5,31 @@ pragma solidity >=0.4.22 <0.9.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/PullPayment.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
 
 contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     using Strings for uint256;
 
+    ERC1155 public memberships;
     string public baseURI;
     string public baseExtension = ".json";
-    uint256 public publicCost = 2 ether;
-    uint256 public whiteListCost = 1 ether;
 
+    //Price
+    uint256 public publicCost = 400 ether;
+    uint256 public EbisusbayMemberPrice = 350 ether;
+    uint256 public whiteListCost = 300 ether;
+
+    //Restrictions
     uint256 public maxSupply = 2500;
     uint256 public maxMintAmount = 25;
     uint256 public nftPerAddressLimit = 50;
 
     //Ebisusbay FEE : 5%
     uint public ebisusbayFee = 5;
-    // Address is to set up
+    // EbisusbayWallet
     address public ebisusbayWallet = 0x454cfAa623A629CC0b4017aEb85d54C42e91479d;
+    address public memberShipAddress = 0x3F1590A5984C89e6d5831bFB76788F3517Cdf034;
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
@@ -78,11 +86,22 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
             whitelistedAddresses[msg.sender] = false;
 
             } else {
+
+                uint amountFee;
+                if (isEbisusBayMember(msg.sender) && msg.sender == memberShipAddress ) {
+                require(
+                    msg.value >= (EbisusbayMemberPrice * _mintAmount),
+                    "insufficient funds"
+                );
+                      amountFee = ( (EbisusbayMemberPrice * _mintAmount) * ebisusbayFee) / 100;
+                } else {
                 require(
                     msg.value >= (publicCost * _mintAmount),
                     "insufficient funds"
                 );
-                      uint amountFee = ( (publicCost * _mintAmount) * ebisusbayFee) / 100;
+                      amountFee = ( (publicCost * _mintAmount) * ebisusbayFee) / 100;
+                }
+
                 
 
                           for (uint256 i = 1; i <= _mintAmount; i++) {
@@ -190,7 +209,19 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
         onlyWhitelisted = _state;
     }
 
+    // End of White List;
+
     function getBalance() public view onlyOwner returns(uint256){
         return address(this).balance;
     }
+
+    // Ebisusbay Member
+     function isEbisusBayMember(address _address) public view returns (bool) {
+        return memberships.balanceOf(_address, 1) > 0 || memberships.balanceOf(_address, 2) > 0;
+    }
+
+        function setMemberShipAddress(address _address) public onlyOwner {
+        memberShipAddress = _address;
+    }
+
 }
