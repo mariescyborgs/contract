@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     using Strings for uint256;
 
-    ERC1155 public memberships;
+ 
     string public baseURI;
     string public baseExtension = ".json";
 
@@ -30,6 +30,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     // EbisusbayWallet
     address public ebisusbayWallet = 0x454cfAa623A629CC0b4017aEb85d54C42e91479d;
     address public memberShipAddress = 0x3F1590A5984C89e6d5831bFB76788F3517Cdf034;
+  
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
@@ -43,6 +44,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
         string memory _initBaseURI
     ) ERC721(_name, _symbol) {
         setBaseURI(_initBaseURI);
+        
     }
 
 
@@ -88,7 +90,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
             } else {
 
                 uint amountFee;
-                if (isEbisusBayMember(msg.sender) && msg.sender == memberShipAddress ) {
+                if (isEbisusBayMember(msg.sender)) {
                 require(
                     msg.value >= (EbisusbayMemberPrice * _mintAmount),
                     "insufficient funds"
@@ -216,7 +218,9 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     }
 
     // Ebisusbay Member
+    
      function isEbisusBayMember(address _address) public view returns (bool) {
+         ERC1155  memberships = ERC1155(memberShipAddress);
         return memberships.balanceOf(_address, 1) > 0 || memberships.balanceOf(_address, 2) > 0;
     }
 
