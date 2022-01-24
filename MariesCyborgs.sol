@@ -7,11 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/PullPayment.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-
 contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     using Strings for uint256;
 
- 
     string public baseURI;
     string public baseExtension = ".json";
 
@@ -26,11 +24,10 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     uint256 public nftPerAddressLimit = 50;
 
     //Ebisusbay FEE : 5%
-    uint public ebisusbayFee = 5;
+    uint256 public ebisusbayFee = 5;
     // EbisusbayWallet
     address public ebisusbayWallet = 0x454cfAa623A629CC0b4017aEb85d54C42e91479d;
     address public memberShipAddress = 0x3F1590A5984C89e6d5831bFB76788F3517Cdf034;
-  
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
@@ -44,9 +41,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
         string memory _initBaseURI
     ) ERC721(_name, _symbol) {
         setBaseURI(_initBaseURI);
-        
     }
-
 
     // internal
     function _baseURI() internal view virtual override returns (string memory) {
@@ -78,51 +73,43 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
             );
 
             if (verifyUser(msg.sender)) {
-                require(
-                    msg.value >= whiteListCost,
-                    "insufficient funds"
-                );
+                require(msg.value >= whiteListCost, "insufficient funds");
                 require(_mintAmount == 1, "only 1 for White-List");
-                 addressMintedBalance[msg.sender]++;
-            _safeMint(msg.sender, supply + 1);
-            whitelistedAddresses[msg.sender] = false;
-
+                addressMintedBalance[msg.sender]++;
+                _safeMint(msg.sender, supply + 1);
+                whitelistedAddresses[msg.sender] = false;
             } else {
-
-                uint amountFee;
+                uint256 amountFee;
                 if (isEbisusBayMember(msg.sender)) {
-                require(
-                    msg.value >= (EbisusbayMemberPrice * _mintAmount),
-                    "insufficient funds"
-                );
-                      amountFee = ( (EbisusbayMemberPrice * _mintAmount) * ebisusbayFee) / 100;
+                    require(
+                        msg.value >= (EbisusbayMemberPrice * _mintAmount),
+                        "insufficient funds"
+                    );
+                    amountFee =
+                        ((EbisusbayMemberPrice * _mintAmount) * ebisusbayFee) /
+                        100;
                 } else {
-                require(
-                    msg.value >= (publicCost * _mintAmount),
-                    "insufficient funds"
-                );
-                      amountFee = ( (publicCost * _mintAmount) * ebisusbayFee) / 100;
+                    require(
+                        msg.value >= (publicCost * _mintAmount),
+                        "insufficient funds"
+                    );
+                    amountFee =
+                        ((publicCost * _mintAmount) * ebisusbayFee) /
+                        100;
                 }
 
-                
-
-                          for (uint256 i = 1; i <= _mintAmount; i++) {
-            addressMintedBalance[msg.sender]++;
-            _safeMint(msg.sender, supply + i);
-        }
-             _asyncTransfer(ebisusbayWallet,  amountFee);
-
+                for (uint256 i = 1; i <= _mintAmount; i++) {
+                    addressMintedBalance[msg.sender]++;
+                    _safeMint(msg.sender, supply + i);
+                }
+                _asyncTransfer(ebisusbayWallet, amountFee);
             }
         } else {
-                                      for (uint256 i = 1; i <= _mintAmount; i++) {
-            addressMintedBalance[msg.sender]++;
-            _safeMint(msg.sender, supply + i);
+            for (uint256 i = 1; i <= _mintAmount; i++) {
+                addressMintedBalance[msg.sender]++;
+                _safeMint(msg.sender, supply + i);
+            }
         }
-        }
-
-   
-
-       
 
         emit MintEvent(msg.sender, _mintAmount);
     }
@@ -152,8 +139,6 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-
-
 
         string memory currentBaseURI = _baseURI();
         return
@@ -191,9 +176,8 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     // White List
 
     function setAllowList(address[] calldata addresses) public onlyOwner {
-          
         for (uint256 i = 0; i < addresses.length; i++) {
-             require(addresses[i] != address(0), "Invalid address");
+            require(addresses[i] != address(0), "Invalid address");
             whitelistedAddresses[addresses[i]] = true;
         }
     }
@@ -213,19 +197,34 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
 
     // End of White List;
 
-    function getBalance() public view onlyOwner returns(uint256){
+    function getBalance() public view onlyOwner returns (uint256) {
         return address(this).balance;
     }
 
     // Ebisusbay Member
-    
-     function isEbisusBayMember(address _address) public view returns (bool) {
-         ERC1155  memberships = ERC1155(memberShipAddress);
-        return memberships.balanceOf(_address, 1) > 0 || memberships.balanceOf(_address, 2) > 0;
+
+    function isEbisusBayMember(address _address) public view returns (bool) {
+        ERC1155 memberships = ERC1155(memberShipAddress);
+        return
+            memberships.balanceOf(_address, 1) > 0 ||
+            memberships.balanceOf(_address, 2) > 0;
     }
 
-        function setMemberShipAddress(address _address) public onlyOwner {
+    function setMemberShipAddress(address _address) public onlyOwner {
         memberShipAddress = _address;
     }
 
+    //Get NFT Cost
+    function cost(address _address) public view returns (uint256) {
+          require(_address != address(0), "not address 0");
+        if (verifyUser(_address)) {
+            return whiteListCost;
+        }
+
+        if (isEbisusBayMember(_address)) {
+            return EbisusbayMemberPrice;
+        }
+
+        return publicCost;
+    }
 }
