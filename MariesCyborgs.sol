@@ -27,10 +27,24 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
     uint256 public ebisusbayFee = 5;
     // EbisusbayWallet
     address public ebisusbayWallet = 0x454cfAa623A629CC0b4017aEb85d54C42e91479d;
-    address public memberShipAddress = 0x3F1590A5984C89e6d5831bFB76788F3517Cdf034;
+    address public memberShipAddress =
+        0x3F1590A5984C89e6d5831bFB76788F3517Cdf034;
 
     bool public paused = false;
     bool public onlyWhitelisted = false;
+
+    //Struct with all Infos
+    struct Infos {
+        uint256 regularCost;
+        uint256 memberCost;
+        uint256 whitelistCost;
+        uint256 maxSupply;
+        uint256 totalSupply;
+        uint256 maxMintPerAddress;
+        uint256 maxMintPerTx;
+    }
+
+    // Infos[] public infosArr;
 
     mapping(address => uint256) public addressMintedBalance;
     mapping(address => bool) public whitelistedAddresses;
@@ -41,6 +55,19 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
         string memory _initBaseURI
     ) ERC721(_name, _symbol) {
         setBaseURI(_initBaseURI);
+    }
+
+    function getInfos() public view returns (Infos memory) {
+        Infos memory allInfos;
+        allInfos.regularCost = publicCost;
+        allInfos.memberCost = EbisusbayMemberPrice;
+        allInfos.whitelistCost = whiteListCost;
+        allInfos.maxSupply = maxSupply;
+        allInfos.totalSupply = totalSupply();
+        allInfos.maxMintPerAddress = nftPerAddressLimit;
+        allInfos.maxMintPerTx = maxMintAmount;
+
+        return allInfos;
     }
 
     // internal
@@ -216,7 +243,7 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
 
     //Get NFT Cost
     function cost(address _address) public view returns (uint256) {
-          require(_address != address(0), "not address 0");
+        require(_address != address(0), "not address 0");
         if (verifyUser(_address)) {
             return whiteListCost;
         }
