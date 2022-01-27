@@ -254,4 +254,36 @@ contract MariesCyborgs is ERC721Enumerable, Ownable, PullPayment {
 
         return publicCost;
     }
+
+    // Can Mint Function
+  function canMint(address _address) public view returns(uint256){
+           require(_address != address(0), "not address 0");
+
+             uint256 supply = totalSupply();
+          require(supply >= 0, "no nft left");
+
+           if(verifyUser(_address)){
+               return 1;
+           }
+
+            uint256 _amount;
+            uint256 ownerMintedCount = addressMintedBalance[_address];
+
+            if(maxMintAmount < ( nftPerAddressLimit - ownerMintedCount) ){
+                _amount = maxMintAmount;
+            } else {
+                _amount =  (nftPerAddressLimit - ownerMintedCount);
+            }
+
+            uint256 _nftLeft = maxSupply - supply;
+
+            if(_nftLeft < _amount){
+                return _nftLeft;
+            } else {
+                return _amount;
+            }
+
+                
+    }
+    
 }
